@@ -1,0 +1,75 @@
+<?php
+require_once __DIR__ . '/../DB/config.php';
+
+class User {
+    private $id;
+    private $name;
+    private $email;
+    private $password;
+    private $role;
+    private $is_active;
+    private $database;
+
+    public function __construct(string $email = '', string $password = '') {
+        $this->email = trim($email);
+        $this->password = $password;
+        $this->database = new Db();
+    }
+
+    public function verification() {
+        if ($this->email === '' || $this->password === '') {
+            return false;
+        }
+
+        $stmt = $this->database->run_query(
+            'SELECT * FROM user WHERE email = ?',
+            [$this->email]
+        );
+        $user = $stmt->fetch();
+
+        if (!$user || !password_verify($this->password, $user['password']) || !$user['is_active']) {
+            return false;
+        }
+
+        $this->id = $user['id'];
+        $this->name = $user['name'];
+        $this->email = $user['email'];
+        $this->role = $user['role'];
+        $this->is_active = $user['is_active'];
+
+        session_regenerate_id(true);
+        $_SESSION['user_id'] = $this->id;
+        $_SESSION['name'] = $this->name;
+        $_SESSION['email'] = $this->email;
+        $_SESSION['role'] = $this->role;
+
+        return true;
+    }
+
+    public function register(string $name, string $email, string $password) {
+        $name = trim($name);
+        $email = trim($email);
+
+        if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($password) < 6) {
+            return false;
+        }
+
+        $exists = $this->database->run_query('SELECT id FROM user WHERE email = ?', [$email])->fetch();
+        if ($exists) {
+            return false;
+        }
+
+        $this->database->run_query(
+            'INSERT INTO user (name, email, password, role, is_active) VALUES (?, ?, ?, ?, ?)',
+            [$name, $email, password_hash($password, PASSWORD_DEFAULT), 'user', 1]
+        );
+        return true;
+    }
+
+    public function getId() { return $this->id; }
+    public function getName() { return $this->name; }
+    public function getEmail() { return $this->email; }
+    public function getRole() { return $this->role; }
+    public function getIsActive() { return $this->is_active; }
+}
+?>
