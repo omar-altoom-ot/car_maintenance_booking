@@ -1,3 +1,8 @@
+<?php
+require_once 'includes.php';
+require_once 'classes/Service.php';
+$services = (new Service())->getAll();
+?>
 <!doctype html>
 <html lang="en">
     <head>
@@ -11,12 +16,10 @@
         <header class="site-header">
             <a class="brand" href="index.php">Auto<span>Care</span></a>
             <nav>
-                <a href="index.php">Home</a><a href="#services">Services</a><a href="my-bookings.php">My bookings</a>
+                <a href="index.php">Home</a><a href="#services">Services</a><?php if (!empty($_SESSION['user_id'])): ?><a href="my-bookings.php">My bookings</a><?php endif; ?>
             </nav>
             <div class="header-actions">
-                <a class="btn btn-outline" href="logout.php">Log out</a
-                ><a class="btn btn-outline" href="login.php">Log in</a
-                ><a class="btn btn-primary" href="register.php">Create account</a>
+                <?php if (!empty($_SESSION['user_id'])): ?><a class="btn btn-outline" href="logout.php">Log out</a><?php else: ?><a class="btn btn-outline" href="login.php">Log in</a><a class="btn btn-primary" href="register.php">Create account</a><?php endif; ?>
             </div>
         </header>
         <main>
@@ -28,7 +31,7 @@
                         Book trusted maintenance services in minutes. Choose a service, pick a convenient time, and let
                         our technicians take care of the rest.
                     </p>
-                    <a class="btn btn-primary" href="">Book an appointment</a>
+                    <a class="btn btn-primary" href="<?= !empty($_SESSION['user_id']) ? 'my-bookings.php' : 'login.php' ?>">Book an appointment</a>
                 </div>
                 <div class="hero-card">
                     <div class="car-emoji">🚘</div>
@@ -44,15 +47,15 @@
                     </div>
                 </div>
                 <div class="service-grid">
-                    <article class="service-card">
+                    <?php foreach ($services as $service): ?><article class="service-card">
                         <span class="service-icon">⚙</span>
-                        <h3></h3>
-                        <p></p>
+                        <h3><?= e($service['name']) ?></h3>
+                        <p><?= e($service['description']) ?></p>
                         <div class="service-bottom">
-                            <span>From <strong>$</strong></span
-                            ><a href="">Book →</a>
+                            <span>From <strong>$<?= e($service['price']) ?></strong></span
+                            ><a href="<?= !empty($_SESSION['user_id']) ? 'my-bookings.php' : 'login.php' ?>">Book →</a>
                         </div>
-                    </article>
+                    </article><?php endforeach; ?>
                 </div>
             </section>
         </main>

@@ -1,5 +1,21 @@
 <?php
-
+require_once 'includes.php';
+require_once 'classes/User.php';
+$error = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $name = is_string($_POST['name'] ?? null) ? $_POST['name'] : '';
+    $email = is_string($_POST['email'] ?? null) ? $_POST['email'] : '';
+    $password = is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
+    $confirm = is_string($_POST['confirm'] ?? null) ? $_POST['confirm'] : '';
+    if ($password !== $confirm) {
+        $error = 'Passwords do not match.';
+    } elseif ((new User())->register($name, $email, $password)) {
+        header('Location: login.php?registered=1');
+        exit;
+    } else {
+        $error = 'Please check your details. Use a valid email and a password of at least 6 characters.';
+    }
+}
 ?>
 <!doctype html>
 <html lang="en">
@@ -21,10 +37,10 @@
                 <h1>Create account</h1>
                 <p>Create an account to book car services.</p>
 
-                <p class="error"></p>
+                <?php if ($error): ?><p class="error"><?= e($error) ?></p><?php endif; ?>
                 <form method="post">
-                    <label>Full name</label><input name="name" value="" required /><label>Email address</label
-                    ><input type="email" name="email" value="" required /><label>Password</label
+                    <label>Full name</label><input name="name" value="<?= e($_POST['name'] ?? '') ?>" required /><label>Email address</label
+                    ><input type="email" name="email" value="<?= e($_POST['email'] ?? '') ?>" required /><label>Password</label
                     ><input type="password" name="password" minlength="6" required /><label>Confirm password</label
                     ><input type="password" name="confirm" minlength="6" required /><button
                         class="btn btn-primary full"

@@ -55,15 +55,28 @@ class User
 
     public function register(string $name, string $email, string $password)
     {
-        
+        $name = trim($name);
+        $email = trim($email);
+
+        if ($name === "" || strlen($name) > 100 || strlen($email) > 150 || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($password) < 6) {
+            return false;
+        }
+
+        $exists = $this->database->run_query("SELECT id FROM user WHERE email = ?", [$email])->fetch();
+        if ($exists) {
+            return false;
+        }
+
+        $this->database->run_query(
+            "INSERT INTO user (name, email, password, role, is_active) VALUES (?, ?, ?, 'user', 1)",
+            [$name, $email, password_hash($password, PASSWORD_DEFAULT)]
+        );
+        return true;
     }
 
     public function getAll()
     {
-        return $this->database
-            ->run_query(
-                "SELECT id,name,email,is_active,created_at FROM user WHERE role='user' ORDER BY created_at DESC"
-            )
+        return $this->database->run_query("SELECT id,name,email,is_active,created_at FROM user WHERE role='user' ORDER BY created_at DESC")
             ->fetchAll();
     }
 

@@ -1,25 +1,23 @@
 <?php
 
-session_start();
-
+require_once 'includes.php';
 require 'classes/User.php';
 
-if($_SERVER ['REQUEST_METHOD'] == 'POST') {
-    if(isset($_POST['email']) && isset($_POST['password'])){
-    $email = trim($_POST ['email']);
-    $password = trim($_POST ['password']);
+ $error = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $email = is_string($_POST['email'] ?? null) ? trim($_POST['email']) : '';
+    $password = is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
 
     $user = new User($email, $password);
-        if($user->verification()){
-            if($user->getRole() == 'admin'){
-                header('Location: admin/dashboard.php');
-                exit();
-            } else {
-                header('Location: my-bookings.php');
-                exit();
-            }
+    if ($user->verification()) {
+        if ($user->getRole() === 'admin') {
+            header('Location: admin/dashboard.php');
+        } else {
+            header('Location: my-bookings.php');
         }
+        exit;
     }
+    $error = 'Email or password is incorrect, or the account is inactive.';
 }
 
 
@@ -47,10 +45,11 @@ if($_SERVER ['REQUEST_METHOD'] == 'POST') {
                 <span class="eyebrow">YOUR ACCOUNT</span>
                 <h1>Welcome back</h1>
                 <p>Sign in to manage your appointments.</p>
+                <?php if ($error): ?><p class="error"><?= e($error) ?></p><?php endif; ?>
 
                 <form method="post">
                     <label>Email address</label>
-                    <input type="email" name="email" value="" required />
+                    <input type="email" name="email" value="<?= e($_POST['email'] ?? '') ?>" required />
                     <label>Password</label>
                     <input type="password" name="password" required />
                     <button class="btn btn-primary full" type="submit">Log in</button>
