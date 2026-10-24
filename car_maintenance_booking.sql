@@ -146,6 +146,24 @@ ALTER TABLE `user`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 COMMIT;
 
+-- Reservation Management System: capacity-based time slots.
+CREATE TABLE `time_slot` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `slot_date` date NOT NULL,
+  `start_time` time NOT NULL,
+  `end_time` time NOT NULL,
+  `capacity` int(11) NOT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_slot_date_start` (`slot_date`,`start_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+ALTER TABLE `reservation` ADD `slot_id` int(11) DEFAULT NULL AFTER `service_id`;
+INSERT INTO `time_slot` (`slot_date`,`start_time`,`end_time`,`capacity`)
+SELECT `reservation_date`,`reservation_time`,ADDTIME(`reservation_time`,'01:00:00'),GREATEST(1,SUM(`status` IN ('pending','confirmed'))) FROM `reservation` GROUP BY `reservation_date`,`reservation_time`;
+UPDATE `reservation` r JOIN `time_slot` t ON t.slot_date=r.reservation_date AND t.start_time=r.reservation_time SET r.slot_id=t.id;
+ALTER TABLE `reservation` ADD KEY `idx_reservation_slot_status` (`slot_id`,`status`), ADD KEY `idx_reservation_user_slot` (`user_id`,`slot_id`);
+
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

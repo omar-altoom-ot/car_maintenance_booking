@@ -16,5 +16,6 @@ class Db {
         $stmt->execute($param);
         return $stmt;
     }
-}
+
+   }
 ?>
